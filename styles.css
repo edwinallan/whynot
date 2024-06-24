@@ -1,4 +1,8 @@
 body{
+    
+}
+
+.w-dyn-list{
     background: red;
 }
 .w-dyn-items .w-dyn-item:nth-child(n+2) .shapes-wrapper{
