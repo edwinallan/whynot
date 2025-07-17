@@ -19,7 +19,7 @@
    "liveSassCompile.settings.autoprefix": [
        "defaults"
    ],
-   "minify.minifyExistingOnSave": false,
+   "minify.minifyExistingOnSave": true,
 
 "editor.formatOnType": true,
 }
