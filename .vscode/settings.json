@@ -3,7 +3,13 @@
        
        {
            "extensionName": ".css",
-           "savePath": "/"
+           "savePath": "/",
+           "format": "expanded"
+       },
+       {
+           "extensionName": ".min.css",
+           "savePath": "/",
+           "format": "compressed"
        }
    ],
    "liveSassCompile.settings.excludeList": [
@@ -13,6 +19,7 @@
    "liveSassCompile.settings.autoprefix": [
        "defaults"
    ],
+   "minify.minifyExistingOnSave": false,
 
 "editor.formatOnType": true,
 }

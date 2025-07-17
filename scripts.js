@@ -1,3 +1,58 @@
+// token:
+//78e99139f94bdfde044307ce12d7acbe2ef16cb4c6db93c43dc666edba171879
+
+// Function to handle the filter click event
+function filterProjects(e) {
+  e.preventDefault(); // Prevent default link behavior
+  $("#filtres div a.tag").addClass("unchecked");
+  $(this).removeClass("unchecked");
+
+  // Get the category ID from the clicked link
+  var categoryId = $(this).attr("data-id");
+
+  // Loop through each project item
+  $("#projets div[role=listitem]").each(function () {
+    if (categoryId === undefined) {
+      $(this).show();
+      return;
+    }
+    var itemId = $(this).attr("data-id");
+    var showItem = false;
+
+    // Loop through the categories to find matching subItems
+    categories.forEach(function (category) {
+      if (category.url === itemId) {
+        if (category.subItems.includes(categoryId)) {
+          showItem = true;
+        }
+      }
+    });
+
+    // Show or hide the item based on the category filter
+    if (showItem) {
+      $(this).show();
+    } else {
+      $(this).hide();
+    }
+  });
+}
+
+function retirerLiensCategoriesVides() {
+  var linkDataId = $(this).data("id");
+  var found = false;
+
+  $.each(categories, function (index, category) {
+    if (category.subItems.includes(linkDataId)) {
+      found = true;
+      return false; // exit loop
+    }
+  });
+
+  if (!found) {
+    $(this).closest('[role="listitem"]').hide();
+  }
+}
+
 function projectReadMore() {
   var richTextBlock = $("#description .rich-text-block");
   var readMoreLink = $("#description .readmore");
@@ -366,6 +421,34 @@ function whynotDynamicColours() {
   );
 }
 
+function vCardOlivier() {
+  const vcardData = `BEGIN:VCARD
+VERSION:3.0
+N:Terny;Olivier;;;
+FN:Olivier Terny
+ORG:whynot architecture
+EMAIL;TYPE=INTERNET,WORK,pref:oli@whynot.archi
+TEL;TYPE=WORK,pref:+41798581418
+ADR;TYPE=WORK,pref:;;Côtes-de-Montbenon 6;Lausanne;;1003;Switzerland
+URL;TYPE=WORK,pref:https://whynot.archi
+END:VCARD`;
+
+  // Create a Blob from the vCard data
+  const blob = new Blob([vcardData], { type: "text/vcard" });
+
+  // Create a temporary anchor element and trigger the download
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = "contact.vcf";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Release the object URL after the download
+  URL.revokeObjectURL(url);
+}
+
 $(document).ready(function () {
   logVisibleGridRowsAndColumns();
 
@@ -373,6 +456,8 @@ $(document).ready(function () {
   saveOriginalOrder();
   waitForImagesToLoad(projectMasonryOrder);
   projectEntrepriseBold();
+
+  $("#oli-vcard").on("click", vCardOlivier);
 
   var previousColumnCount = parseInt($("#masonry").css("column-count"), 10);
 
@@ -389,6 +474,18 @@ $(document).ready(function () {
   });
   accordionItemClick();
 
+  if ($("html").attr("data-wf-page") == "667935b968953faca0920638") {
+    $("#filtres a").each(retirerLiensCategoriesVides);
+
+    $("#all-projects").wrap(
+      '<div role="listitem" class="collection-item-9 w-dyn-item"></div>'
+    );
+    $("#filtres").prepend($("#all-projects").parent());
+
+    // Bind the function to click event of filter links
+    $("#filtres div a.tag").click(filterProjects);
+  }
+
   if (
     !("ontouchstart" in window) &&
     !("onmsgesturechange" in window) &&
@@ -400,58 +497,4 @@ $(document).ready(function () {
     accordionHover();
     whynotDynamicColours();
   }
-
-  // Make sure GSAP and ScrollTrigger are loaded
-  gsap.registerPlugin(ScrollTrigger);
-
-  // Get the height of the navbar
-  const navbar = document.querySelector("div.navbar");
-  const navbarHeight = navbar ? navbar.offsetHeight : 0;
-
-  // Select all elements with the attribute "parallax"
-  const parallaxElements = document.querySelectorAll("[parallax]");
-
-  function initParallax() {
-    // Clear previous ScrollTriggers
-    ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-
-    // Check viewport width
-    if (window.innerWidth < 992) {
-      // Iterate over each element to create a ScrollTrigger animation
-      parallaxElements.forEach((element) => {
-        // Get the parallax value from the "parallax" attribute in pixels
-        const endPosition = element.getAttribute("parallax") || "0";
-        const elementTop = element.getBoundingClientRect().top + window.scrollY; // Get the initial position of the element
-        const viewportHeight = window.innerHeight;
-        const pageHeight = document.documentElement.scrollHeight;
-        const elementBottom = elementTop + element.offsetHeight;
-
-        let startPosition;
-
-        // Check if the element is lower than the total page height minus the viewport height
-        if (elementBottom > pageHeight - viewportHeight) {
-          startPosition = `bottom bottom`;
-        } else {
-          startPosition = `top-=${navbarHeight}px top`;
-        }
-
-        // Create the animation
-        gsap.to(element, {
-          scrollTrigger: {
-            trigger: element,
-            start: startPosition, // Start position relative to navbar height or from bottom
-            end: `+=${endPosition}`, // End after scrolling endPosition pixels
-            scrub: true, // Smoothly animate as the user scrolls
-          },
-          y: `+=${endPosition}`, // Use parallax value for the amount of parallax movement in pixels
-          ease: "power1.out", // Add easing in and out
-        });
-      });
-    }
-  }
-
-  initParallax();
-
-  // Reinitialize on resize
-  window.addEventListener("resize", initParallax);
 });

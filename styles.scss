@@ -1,11 +1,15 @@
 body{
+  cursor: url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c4559d00356476c0926e1b_cursor-blue.svg'), url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c45308cb48e16138b239f6_cursor-blue.png') , auto;
+  a:hover{
+    cursor: url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c4559d36abb0fe8a92f12c_cursor-red.svg'), url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c452de347fe815efece542_cursor.png') , auto;
+  }
      .container{
         #metadata{
             div.meta-row{
                 @media (max-width: 1920px) {
-                  flex-flow: column;
-                  align-items: flex-start;
-                  }
+                  flex-flow: column; 
+                  align-items: flex-start;  
+                  } 
 
                   @media (max-width: 991px) {
                     display: flex;
@@ -75,7 +79,7 @@ body{
               position: relative;
               max-height: 200px;
               overflow: hidden;
-              transition: max-height 0.5s ease;
+              //transition: max-height 0.5s ease;
 
               @media (max-width: 584px) {
                 column-count: 1;
@@ -131,6 +135,18 @@ body{
      }
 }
 
+.w-dyn-list .w-dyn-item .project-link{
+  .voir-le-projet{
+    visibility: hidden;
+  }
+  &:hover{
+    .voir-le-projet{
+      visibility: visible;
+      color: var(--blue)
+    }
+  }
+}
+
 .w-dyn-list .w-dyn-item:nth-child(2) .div-block{
     div.div-block-2{
         order: 1;
@@ -156,8 +172,24 @@ body{
     }
 }
 
+.profile-element#peut-etre-toi{
+  .blue-filter{
+    display: none;
+  }
+}
+
+.homepage_mosaic .homepage_mosaic_item{
+  a.red{
+    cursor: url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c4559d00356476c0926e1b_cursor-blue.svg'), url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c45308cb48e16138b239f6_cursor-blue.png') , auto;
+  }
+}
+
 .accordion {
   .accordion-item {
+
+    .accordion-last.w-dyn-bind-empty{
+      display: block!important;
+    }
 
     .accordion-details {
       display: none;
@@ -167,6 +199,7 @@ body{
     }
 
     &:hover{
+      cursor: url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c4559d36abb0fe8a92f12c_cursor-red.svg'), url('https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c452de347fe815efece542_cursor.png') , auto;
       *{
         color: var(--red);
       }
@@ -181,6 +214,18 @@ body{
       }
 
       
+    }
+  }
+}
+
+body .blue-filter-container{
+  
+  &:hover{
+    img{
+      filter: none;
+    }
+    .blue-filter{
+      display: none;
     }
   }
 }
