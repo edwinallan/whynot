@@ -422,7 +422,7 @@ function whynotDynamicColours() {
 }
 
 const vcardKey = "whynotkey";
-const scrambledVCardData = 
+const scrambledVCardData =
   "53,45,62,39,33,78,61,38,56,37,44,115,56,42,38,56,44,54,57,82,74,64,95,126,37,95,45,18,26,23,23,84,59,7,12,15,30,13,11,85,84,79,97,35,55,77,39,21,7,25,29,14,23,89,35,13,11,0,22,126,36,55,62,77,31,17,23,1,27,31,69,24,5,11,17,7,27,17,8,17,12,5,13,115,43,34,53,34,41,66,35,49,41,43,82,61,37,49,60,37,38,60,58,67,35,36,55,50,91,24,11,11,9,78,4,9,16,55,31,17,23,1,27,31,75,24,5,11,17,7,101,32,46,41,66,35,49,41,43,82,35,36,55,50,91,24,11,11,9,78,64,81,72,64,81,65,91,87,69,95,84,65,125,41,61,60,84,32,50,53,60,74,63,54,60,36,88,27,23,28,17,82,66,85,44,128,31,0,10,90,12,28,67,34,27,5,17,27,18,6,22,0,79,66,80,41,24,2,27,24,0,1,17,80,94,72,71,88,74,85,60,3,2,17,3,18,26,21,15,1,16,97,48,43,59,83,45,55,63,49,86,50,54,37,35,85,30,29,17,13,95,17,3,28,9,29,85,91,68,18,17,14,6,22,26,65,21,25,6,17,30,98,60,32,43,78,61,38,56,37,44";
 
 function descrambleVCardData(scrambled, key) {
@@ -455,6 +455,22 @@ function vCardOlivier() {
   URL.revokeObjectURL(url);
 }
 
+const PAGE_IDS = {
+  allProjects: ["667935b968953faca0920638"],
+  singleProject: ["6666ef1e6fb4b231ea16afbb"],
+};
+
+function isCurrentPage(pageKey) {
+  const configuredIds = PAGE_IDS[pageKey];
+  if (!configuredIds) {
+    console.warn("PAGE_IDS missing config for:", pageKey);
+    return false;
+  }
+  const currentPageId = $("html").attr("data-wf-page");
+  const ids = Array.isArray(configuredIds) ? configuredIds : [configuredIds];
+  return ids.includes(currentPageId);
+}
+
 $(document).ready(function () {
   logVisibleGridRowsAndColumns();
 
@@ -480,7 +496,7 @@ $(document).ready(function () {
   });
   accordionItemClick();
 
-  if ($("html").attr("data-wf-page") == "667935b968953faca0920638") {
+  if (isCurrentPage("allProjects")) {
     $("#filtres a").each(retirerLiensCategoriesVides);
 
     $("#all-projects").wrap(
