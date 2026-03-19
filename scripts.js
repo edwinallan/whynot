@@ -54,35 +54,55 @@ function retirerLiensCategoriesVides() {
 }
 
 function projectReadMore() {
-  var richTextBlock = $("#description .rich-text-block");
-  var readMoreLink = $("#description .readmore");
-  var content = richTextBlock.text();
-  var readmoretext = readMoreLink.text();
+  var $section = $(".project-section-description");
+  var $readMoreLink = $section.find(".readmore");
+  var $longueContent = $section.find(".longue");
+  var $courteContent = $section.find(".courte");
 
-  // Count characters
-  if (content.length > 600) {
-    richTextBlock.parent().addClass("shortened");
-    readMoreLink.show();
-  } else {
-    readMoreLink.hide();
+  if ($readMoreLink.length > 0) {
+    $readMoreLink.on("click", function (e) {
+      e.preventDefault();
+
+      // 1. Get the current height of the section before changing anything
+      var startHeight = $section.outerHeight();
+
+      // 2. Explicitly set the height so the CSS transition has a starting point
+      $section.css("height", startHeight);
+
+      // 3. Swap the content visibility immediately
+      $courteContent.hide();
+      $longueContent.addClass("is-visible");
+
+      // 4. Calculate what the new height WILL be
+      // We use scrollHeight to see the natural height of the now-hidden-but-expanded content
+      var endHeight = $section[0].scrollHeight;
+
+      // 5. Use requestAnimationFrame to ensure the browser realizes the height has changed
+      // This triggers the CSS 'transition' property defined in your styles
+      requestAnimationFrame(function () {
+        $section.css("height", endHeight);
+      });
+
+      // 6. Hide the button
+      $(this).fadeOut(300);
+
+      // 7. Cleanup: Once transition is done, reset height to 'auto' for responsiveness
+      $section.one("transitionend", function () {
+        $section.css("height", "auto");
+      });
+    });
   }
+}
 
-  // Toggle shortened class on click
-  readMoreLink.on("click", function (e) {
-    e.preventDefault();
-    $("#description").toggleClass("shortened");
-    if ($("#description").hasClass("shortened")) {
-      $(this)
-        .children("div:first-child")
-        .removeClass("fleche-haut")
-        .addClass("fleche-bas");
-      $(this).children("div:last-child").show();
+function checkLongueColumns() {
+  $(".project-section-description .longue").each(function () {
+    var $this = $(this);
+    // If the text is shorter than 450 characters, force 1 column layout
+    if ($this.text().trim().length < 450) {
+      $this.css("column-count", "1");
     } else {
-      $(this)
-        .children("div:first-child")
-        .removeClass("fleche-bas")
-        .addClass("fleche-haut");
-      $(this).children("div:last-child").hide();
+      // Otherwise, let Webflow's default (3 columns) take over
+      $this.css("column-count", "");
     }
   });
 }
@@ -98,7 +118,7 @@ function saveOriginalOrder() {
       .find("img")
       .attr(
         "sizes",
-        "(max-width: 767px) 100vw, (max-width: 991px) 39vw, 100vw"
+        "(max-width: 767px) 100vw, (max-width: 991px) 39vw, 100vw",
       );
   });
 }
@@ -203,20 +223,12 @@ function waitForImagesToLoad(callback) {
   });
 }
 
-function projectEntrepriseBold() {
-  $(".meta_row .rich-text-block-2 ul li").each(function () {
-    var text = $(this).html();
-    var modifiedText = text.replace(/^(.+?):/, "<strong>$1:</strong>");
-    $(this).html(modifiedText);
-  });
-}
-
 var mobileGalleryNumShownImages = 0;
 var mobileGalleryNumHiddenImages = 0;
 function logVisibleGridRowsAndColumns() {
   // Select the collection list within the specified wrapper
   var $collectionList = $(
-    ".collection-list-wrapper.mobile-images .collection-list"
+    ".collection-list-wrapper.mobile-images .collection-list",
   );
 
   if ($collectionList.length <= 0) {
@@ -236,10 +248,10 @@ function logVisibleGridRowsAndColumns() {
 
   // Filter out rows and columns that are not visible
   var hiddenRows = gridTemplateRows.filter(
-    (row) => row === "0px" || row === "0"
+    (row) => row === "0px" || row === "0",
   );
   var hiddenColumns = gridTemplateColumns.filter(
-    (column) => column === "0px" || column === "0"
+    (column) => column === "0px" || column === "0",
   );
 
   // Calculate the total number of hidden items
@@ -417,7 +429,7 @@ function whynotDynamicColours() {
         "background-color": "",
         color: "",
       });
-    }
+    },
   );
 }
 
@@ -430,7 +442,7 @@ function descrambleVCardData(scrambled, key) {
     .split(",")
     .map(function (value, index) {
       return String.fromCharCode(
-        parseInt(value, 10) ^ key.charCodeAt(index % key.length)
+        parseInt(value, 10) ^ key.charCodeAt(index % key.length),
       );
     })
     .join("");
@@ -546,14 +558,14 @@ function buildDate(year, month, day, timeParts) {
     day,
     timeParts.hours,
     timeParts.minutes,
-    timeParts.seconds
+    timeParts.seconds,
   );
 }
 
 function parseNumericDateSegment(segment) {
   const cleaned = segment.trim().replace(/(\d)(st|nd|rd|th)/gi, "$1");
   const timeMatch = cleaned.match(
-    /(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?$/i
+    /(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?$/i,
   );
   let timeParts = { hours: 0, minutes: 0, seconds: 0 };
   let datePart = cleaned;
@@ -563,7 +575,7 @@ function parseNumericDateSegment(segment) {
       timeMatch[1],
       timeMatch[2],
       timeMatch[3],
-      timeMatch[4]
+      timeMatch[4],
     );
     datePart = cleaned.slice(0, timeMatch.index).trim();
   }
@@ -644,7 +656,7 @@ function parseTextualDateSegment(segment) {
           match[4],
           match[5],
           match[6],
-          match[7]
+          match[7],
         );
         return buildDate(year, monthIndex, day, timeParts);
       } else {
@@ -663,7 +675,7 @@ function parseTextualDateSegment(segment) {
           match[4],
           match[5],
           match[6],
-          match[7]
+          match[7],
         );
         return buildDate(year, monthIndex, day, timeParts);
       }
@@ -914,29 +926,6 @@ function reinitialiseWebflowLightbox() {
   }
 }
 
-function disableArchiveLightboxLinks(archiveEntries) {
-  if (!archiveEntries || archiveEntries.length === 0) {
-    return;
-  }
-
-  archiveEntries.forEach(function (entry) {
-    const $link = entry.link;
-    if (!$link || !$link.length) {
-      return;
-    }
-
-    $link.removeClass("w-lightbox");
-    $link.attr("aria-disabled", "true");
-    $link.attr("tabindex", "-1");
-    $link.css("cursor", "default");
-    $link.off("click.archive-photo").on("click.archive-photo", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    $link.find("script.w-json").remove();
-  });
-}
-
 function tagArchivePhotos() {
   const archiveEntries = [];
   $(".project-section-images .w-dyn-items img").each(function () {
@@ -951,7 +940,13 @@ function tagArchivePhotos() {
       return;
     }
 
-    parentLink.addClass("archive-photo");
+    const parentItem = parentLink.closest(".w-dyn-item");
+    if (!parentItem.length) {
+      return;
+    }
+
+    parentLink.removeClass("archive-photo");
+    parentItem.addClass("archive-photo");
 
     let dateWrapper = parentLink.find(".image-archive-date").first();
     if (!dateWrapper.length) {
@@ -1003,7 +998,7 @@ function groupArchivePhotoItems() {
 
   $container.children(".w-dyn-item").each(function () {
     const $item = $(this);
-    if ($item.find("a.archive-photo").length) {
+    if ($item.hasClass("archive-photo")) {
       currentGroup.push($item);
     } else {
       flushGroup();
@@ -1013,13 +1008,112 @@ function groupArchivePhotoItems() {
   flushGroup();
 }
 
+// Detect and group consecutive vertical images (Performance Optimized)
+function groupVerticalImages() {
+  const $container = $(".project-section-images .w-dyn-items");
+  if (!$container.length) return;
+
+  // Only target the main project images, not the archive ones
+  const $items = $container.children(".w-dyn-item:not(.archive-photo)");
+  if ($items.length === 0) return;
+
+  const orientations = [];
+  let loadedChecks = 0;
+
+  $items.each(function (index) {
+    const $item = $(this);
+    const img = $item.find("img.image-projet")[0];
+
+    // Fallback if no image is found in this item
+    if (!img) {
+      orientations[index] = { item: $item, isVertical: false };
+      checkIfAllDone();
+      return;
+    }
+
+    // Extract the absolute smallest image from Webflow's srcset (usually the first one)
+    let testSrc = img.src;
+    if (img.srcset) {
+      const srcsetParts = img.srcset.split(",");
+      testSrc = srcsetParts[0].trim().split(" ")[0];
+    }
+
+    // Load ONLY the tiny image in background memory to check dimensions instantly
+    const tempImg = new Image();
+    tempImg.onload = function () {
+      const isVertical = tempImg.naturalHeight > tempImg.naturalWidth;
+      orientations[index] = { item: $item, isVertical: isVertical };
+      checkIfAllDone();
+    };
+    tempImg.onerror = function () {
+      // If error, assume horizontal to be safe
+      orientations[index] = { item: $item, isVertical: false };
+      checkIfAllDone();
+    };
+
+    // Trigger the background load
+    tempImg.src = testSrc;
+  });
+
+  // Check if all memory images have reported their dimensions
+  function checkIfAllDone() {
+    loadedChecks++;
+    if (loadedChecks === $items.length) {
+      executeGrouping();
+    }
+  }
+
+  // The actual DOM manipulation
+  function executeGrouping() {
+    // Clean up any existing groups just in case
+    $container.find(".vertical-image-group").each(function () {
+      const $group = $(this);
+      $group.children(".w-dyn-item").insertBefore($group);
+      $group.remove();
+    });
+
+    let verticalPair = [];
+    let itemsMoved = false;
+
+    // Loop through the results in their original DOM order
+    for (let i = 0; i < orientations.length; i++) {
+      const data = orientations[i];
+      if (!data) continue;
+
+      if (data.isVertical) {
+        verticalPair.push(data.item);
+
+        // Wrap when we hit two consecutive vertical images
+        if (verticalPair.length === 2) {
+          const $wrapper = $('<div class="vertical-image-group"></div>');
+          verticalPair[0].before($wrapper);
+          $wrapper.append(verticalPair[0]).append(verticalPair[1]);
+          verticalPair = []; // Reset for the next pair
+          itemsMoved = true;
+        }
+      } else {
+        // Break the sequence if a horizontal image appears
+        verticalPair = [];
+      }
+    }
+
+    // Reinitialize Webflow's lightbox if we changed the DOM structure
+    if (itemsMoved && typeof reinitialiseWebflowLightbox === "function") {
+      reinitialiseWebflowLightbox();
+    }
+  }
+}
+
 $(document).ready(function () {
   logVisibleGridRowsAndColumns();
 
   projectReadMore();
+  checkLongueColumns();
+
   saveOriginalOrder();
   waitForImagesToLoad(projectMasonryOrder);
-  projectEntrepriseBold();
+
+  groupVerticalImages();
 
   $("#oli-vcard").on("click", vCardOlivier);
 
@@ -1032,7 +1126,7 @@ $(document).ready(function () {
       projectMasonryOrder();
     }
 
-    initParallax();
+    //initParallax();
 
     //accordionCalculateAdditionalHeight();
   });
@@ -1042,7 +1136,7 @@ $(document).ready(function () {
     $("#filtres a").each(retirerLiensCategoriesVides);
 
     $("#all-projects").wrap(
-      '<div role="listitem" class="collection-item-9 w-dyn-item"></div>'
+      '<div role="listitem" class="collection-item-9 w-dyn-item"></div>',
     );
     $("#filtres").prepend($("#all-projects").parent());
 
@@ -1053,7 +1147,6 @@ $(document).ready(function () {
   if (isCurrentPage("singleProject")) {
     var archiveEntries = tagArchivePhotos();
     var itemsRemoved = removeArchiveItemsFromLightbox(archiveEntries);
-    disableArchiveLightboxLinks(archiveEntries);
     if (itemsRemoved) {
       reinitialiseWebflowLightbox();
     }

@@ -6,103 +6,89 @@ body a:hover {
   cursor: url("https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c4559d36abb0fe8a92f12c_cursor-red.svg"), url("https://uploads-ssl.webflow.com/6666edf5122df02443324f43/66c452de347fe815efece542_cursor.png"), auto;
 }
 @media (max-width: 1920px) {
-  body .container #metadata div.meta-row {
+  body section.project-section-info-block div.meta-row {
     flex-flow: column;
     align-items: flex-start;
   }
 }
 @media (max-width: 991px) {
-  body .container #metadata div.meta-row {
+  body section.project-section-info-block div.meta-row {
     display: flex;
     flex-flow: row;
   }
-  body .container #metadata div.meta-row .meta_title {
+  body section.project-section-info-block div.meta-row .meta_title {
     min-width: 25%;
   }
 }
 @media (max-width: 640px) {
-  body .container #metadata div.meta-row {
+  body section.project-section-info-block div.meta-row {
     flex-flow: column;
     align-items: flex-start;
   }
 }
-body .container #metadata div.meta-row ul {
+body section.project-section-info-block div.meta-row ul {
   list-style: none;
   padding-left: 0;
 }
-body .container #metadata div.meta-row .meta-value ul li {
+body section.project-section-info-block div.meta-row .meta-value ul li {
   margin-bottom: 1em;
 }
-body .container #metadata div.meta-row .meta-value ul li:last-child {
+body section.project-section-info-block div.meta-row .meta-value ul li:last-child {
   margin-bottom: 0;
 }
-body .container #metadata div.meta-row .meta-value ul listrong {
+body section.project-section-info-block div.meta-row .meta-value ul listrong {
   text-wrap: nowrap;
 }
-body .container #metadata div.meta-row .meta-value ul li a {
+body section.project-section-info-block div.meta-row .meta-value ul li a {
   display: initial;
 }
-body .container #metadata div.meta-row .w-richtext ol, body .container #metadata div.meta-row .w-richtext ul {
+body section.project-section-info-block div.meta-row .w-richtext ol,
+body section.project-section-info-block div.meta-row .w-richtext ul {
   overflow: visible;
 }
-body .container #metadata div.meta-row#ils-en-parlent ul li {
+body section.project-section-info-block div.meta-row#ils-en-parlent ul li {
   display: flex;
 }
-body .container #metadata div.meta-row#ils-en-parlent ul li::before {
+body section.project-section-info-block div.meta-row#ils-en-parlent ul li::before {
   content: "↗︎";
   margin-right: 7px;
   font-size: 1.3em;
   color: var(--blue);
 }
-body .container #description .rich-text-block {
-  position: relative;
-  max-height: 200px;
+body section.project-section-description {
+  transition: height 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   overflow: hidden;
+  position: relative;
+}
+body section.project-section-description .longue {
+  transition: opacity 0.4s ease;
+}
+body section.project-section-description .longue.is-visible {
+  display: block;
+  opacity: 1;
 }
 @media (max-width: 584px) {
-  body .container #description .rich-text-block {
+  body section.project-section-description .rich-text-block {
     -moz-column-count: 1;
          column-count: 1;
   }
 }
-body .container #description .rich-text-block::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 123px;
-  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAB7CAYAAAC1rOouAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAD5JREFUeNpi+P//vxgTAwMDM5xgwsJlwiLLRKQS0rnEKiFWL0mytCMYSZFgJJJLEosILk4xRrzqGPArBggwALv1BO0baRSqAAAAAElFTkSuQmCC") repeat-x;
-  pointer-events: none;
-}
-body .container #description.shortened .rich-text-block {
-  max-height: 200px;
-}
-body .container #description.shortened .rich-text-block::after {
-  display: block;
-}
-body .container #description:not(.shortened) .rich-text-block {
-  max-height: 1000px;
-}
-body .container #description:not(.shortened) .rich-text-block::after {
-  display: none;
-}
 @media (max-width: 1920px) {
-  body .container .collection-list {
+  body .collection-list {
     -moz-column-count: 2;
          column-count: 2;
   }
 }
 @media (max-width: 640px) {
-  body .container .collection-list {
+  body .collection-list {
     -moz-column-count: 1;
          column-count: 1;
   }
 }
-body .container .collection-list .collection-item-2 {
+body .collection-list .collection-item-2 {
   position: relative;
 }
-body .container .collection-list .collection-item-2 span {
+body .collection-list .collection-item-2 span {
   position: absolute;
   background: white;
 }
@@ -136,6 +122,65 @@ body .container .collection-list .collection-item-2 span {
 
 .profile-element#peut-etre-toi .blue-filter {
   display: none;
+}
+
+.project-page .project-section-images div.vertical-image-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 140px;
+}
+@media (min-width: 991px) {
+  .project-page .project-section-images div.vertical-image-group {
+    flex-direction: row;
+  }
+  .project-page .project-section-images div.vertical-image-group > .w-dyn-item {
+    flex: 1;
+    width: 50%;
+    margin-bottom: 0;
+  }
+  .project-page .project-section-images div.vertical-image-group > .w-dyn-item a.lightbox-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .project-page .project-section-images div.vertical-image-group > .w-dyn-item a.lightbox-link img.image-projet {
+    display: block;
+    width: 100%;
+    height: 100%;
+    -o-object-fit: cover;
+       object-fit: cover;
+  }
+}
+.project-page .project-section-images div.archive-photos {
+  -moz-column-count: 2;
+       column-count: 2;
+  -moz-column-gap: 2rem;
+       column-gap: 2rem;
+}
+.project-page .project-section-images div.archive-photos .w-dyn-item.archive-photo a {
+  width: 100%;
+}
+.project-page .project-section-images div.archive-photos > div.w-dyn-item {
+  -moz-column-break-inside: avoid;
+       break-inside: avoid;
+  margin-bottom: 2rem;
+}
+.project-page .project-section-images .w-dyn-item.archive-photo {
+  text-align: center;
+}
+.project-page .project-section-images .w-dyn-item.archive-photo a {
+  width: 80%;
+  margin: 0 auto;
+}
+.project-page .project-section-images .w-dyn-item.archive-photo a img {
+  filter: saturate(0%) contrast(0.7);
+}
+.project-page .project-section-images .w-dyn-item.archive-photo a .image-archive-date {
+  display: block;
+}
+.project-page .project-section-images .w-dyn-item.archive-photo a .image-archive-date p {
+  margin: 0;
 }
 
 .homepage_mosaic .homepage_mosaic_item a.red {
