@@ -460,6 +460,57 @@ const PAGE_IDS = {
   singleProject: ["6666ef1e6fb4b231ea16afbb"],
 };
 
+const MONTH_NAME_TO_INDEX = {
+  january: 0,
+  jan: 0,
+  february: 1,
+  feb: 1,
+  march: 2,
+  mar: 2,
+  april: 3,
+  apr: 3,
+  may: 4,
+  june: 5,
+  jun: 5,
+  july: 6,
+  jul: 6,
+  august: 7,
+  aug: 7,
+  september: 8,
+  sep: 8,
+  sept: 8,
+  october: 9,
+  oct: 9,
+  november: 10,
+  nov: 10,
+  december: 11,
+  dec: 11,
+  janvier: 0,
+  janv: 0,
+  fevrier: 1,
+  février: 1,
+  fev: 1,
+  fév: 1,
+  mars: 2,
+  avril: 3,
+  avr: 3,
+  mai: 4,
+  juin: 5,
+  juin: 5,
+  juillet: 6,
+  juil: 6,
+  aout: 7,
+  août: 7,
+  sept: 8,
+  septembre: 8,
+  oct: 9,
+  octobre: 9,
+  novembre: 10,
+  decembre: 11,
+  décembre: 11,
+  dec: 11,
+};
+
 function isCurrentPage(pageKey) {
   const configuredIds = PAGE_IDS[pageKey];
   if (!configuredIds) {
@@ -469,6 +520,497 @@ function isCurrentPage(pageKey) {
   const currentPageId = $("html").attr("data-wf-page");
   const ids = Array.isArray(configuredIds) ? configuredIds : [configuredIds];
   return ids.includes(currentPageId);
+}
+
+function parseTimeParts(hours, minutes, seconds, meridiem) {
+  let h = parseInt(hours || "0", 10);
+  const m = parseInt(minutes || "0", 10);
+  const s = parseInt(seconds || "0", 10);
+
+  if (meridiem) {
+    const upper = meridiem.toUpperCase();
+    if (upper === "PM" && h < 12) {
+      h += 12;
+    } else if (upper === "AM" && h === 12) {
+      h = 0;
+    }
+  }
+
+  return { hours: h, minutes: m, seconds: s };
+}
+
+function buildDate(year, month, day, timeParts) {
+  return new Date(
+    year,
+    month,
+    day,
+    timeParts.hours,
+    timeParts.minutes,
+    timeParts.seconds
+  );
+}
+
+function parseNumericDateSegment(segment) {
+  const cleaned = segment.trim().replace(/(\d)(st|nd|rd|th)/gi, "$1");
+  const timeMatch = cleaned.match(
+    /(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?$/i
+  );
+  let timeParts = { hours: 0, minutes: 0, seconds: 0 };
+  let datePart = cleaned;
+
+  if (timeMatch) {
+    timeParts = parseTimeParts(
+      timeMatch[1],
+      timeMatch[2],
+      timeMatch[3],
+      timeMatch[4]
+    );
+    datePart = cleaned.slice(0, timeMatch.index).trim();
+  }
+
+  const delimiterMatch = datePart.match(/[-\/.]/);
+  if (!delimiterMatch) {
+    return null;
+  }
+  const delimiter = delimiterMatch[0];
+  const pieces = datePart.split(delimiter).map((part) => part.trim());
+
+  if (pieces.length !== 3) {
+    return null;
+  }
+
+  if (pieces[0].length === 4) {
+    const year = parseInt(pieces[0], 10);
+    const month = parseInt(pieces[1], 10) - 1;
+    const day = parseInt(pieces[2], 10);
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+      return null;
+    }
+    return buildDate(year, month, day, timeParts);
+  }
+
+  let day = parseInt(pieces[0], 10);
+  let month = parseInt(pieces[1], 10) - 1;
+  let year = parseInt(pieces[2], 10);
+
+  if (
+    pieces[2].length === 2 &&
+    !Number.isNaN(year) &&
+    (year >= 0 || year < 100)
+  ) {
+    year += year >= 70 ? 1900 : 2000;
+  }
+
+  if (day > 31 && month < 0) {
+    year = day;
+    day = parseInt(pieces[2], 10);
+    month = parseInt(pieces[1], 10) - 1;
+  } else if (month > 11 && day <= 12) {
+    const temp = day;
+    day = month + 1;
+    month = temp - 1;
+  }
+
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+    return null;
+  }
+
+  return buildDate(year, month, day, timeParts);
+}
+
+function parseTextualDateSegment(segment) {
+  const cleaned = segment.trim().replace(/(\d)(st|nd|rd|th)/gi, "$1");
+  const patterns = [
+    /^(\d{1,2})\s+([A-Za-z]+)\s+(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?)?$/i,
+    /^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?)?$/i,
+  ];
+
+  for (let i = 0; i < patterns.length; i++) {
+    const match = cleaned.match(patterns[i]);
+    if (match) {
+      if (i === 0) {
+        const day = parseInt(match[1], 10);
+        const monthName = match[2].toLowerCase();
+        const year = parseInt(match[3], 10);
+        const monthIndex = MONTH_NAME_TO_INDEX[monthName];
+        if (
+          Number.isNaN(day) ||
+          Number.isNaN(year) ||
+          monthIndex === undefined
+        ) {
+          continue;
+        }
+        const timeParts = parseTimeParts(
+          match[4],
+          match[5],
+          match[6],
+          match[7]
+        );
+        return buildDate(year, monthIndex, day, timeParts);
+      } else {
+        const monthName = match[1].toLowerCase();
+        const day = parseInt(match[2], 10);
+        const year = parseInt(match[3], 10);
+        const monthIndex = MONTH_NAME_TO_INDEX[monthName];
+        if (
+          Number.isNaN(day) ||
+          Number.isNaN(year) ||
+          monthIndex === undefined
+        ) {
+          continue;
+        }
+        const timeParts = parseTimeParts(
+          match[4],
+          match[5],
+          match[6],
+          match[7]
+        );
+        return buildDate(year, monthIndex, day, timeParts);
+      }
+    }
+  }
+
+  return null;
+}
+
+function parseDateFromAltText(text) {
+  if (!text) {
+    return null;
+  }
+
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const cleaned = trimmed.replace(/(\d)(st|nd|rd|th)/gi, "$1");
+  const direct = new Date(cleaned);
+  if (!Number.isNaN(direct.getTime())) {
+    return direct;
+  }
+
+  const patterns = [
+    /\b\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?)?\b/gi,
+    /\b\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?)?\b/gi,
+    /\b\d{1,2}\s+[A-Za-z]+(?:\s+\d{1,2})?,?\s+\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?)?\b/gi,
+    /\b[A-Za-z]+\s+\d{1,2},?\s+\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?)?\b/gi,
+  ];
+
+  for (let i = 0; i < patterns.length; i++) {
+    const pattern = patterns[i];
+    let match;
+    while ((match = pattern.exec(cleaned)) !== null) {
+      const segment = match[0];
+      const native = new Date(segment);
+      if (!Number.isNaN(native.getTime())) {
+        return native;
+      }
+
+      const numeric = parseNumericDateSegment(segment);
+      if (numeric) {
+        return numeric;
+      }
+
+      const textual = parseTextualDateSegment(segment);
+      if (textual) {
+        return textual;
+      }
+    }
+  }
+
+  const pieces = cleaned.split(/[,;|]/);
+  for (let i = 0; i < pieces.length; i++) {
+    const piece = pieces[i].trim();
+    if (!piece) {
+      continue;
+    }
+    const native = new Date(piece);
+    if (!Number.isNaN(native.getTime())) {
+      return native;
+    }
+
+    const numeric = parseNumericDateSegment(piece);
+    if (numeric) {
+      return numeric;
+    }
+
+    const textual = parseTextualDateSegment(piece);
+    if (textual) {
+      return textual;
+    }
+  }
+
+  return null;
+}
+
+function formatDateForArchive(date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return day + "/" + month + "/" + year + " " + hours + ":" + minutes;
+}
+
+function normalizeUrl(url) {
+  if (!url) {
+    return "";
+  }
+  return url.split("#")[0].split("?")[0];
+}
+
+function filenameFromUrl(url) {
+  if (!url) {
+    return "";
+  }
+  const normalized = normalizeUrl(url);
+  if (!normalized) {
+    return "";
+  }
+  const parts = normalized.split("/");
+  return parts[parts.length - 1] || "";
+}
+
+function expandFilenameVariants(filename) {
+  if (!filename) {
+    return [];
+  }
+
+  const variants = new Set([filename]);
+  const variantMatch = filename.match(/^(.*?)(?:-p-\d+|-w-\d+)(\.\w+)$/);
+  if (variantMatch) {
+    variants.add(variantMatch[1] + variantMatch[2]);
+  }
+
+  return Array.from(variants);
+}
+
+function collectCandidateFilenames($img, $parentLink) {
+  const urlCandidates = [
+    $parentLink.attr("href"),
+    $img.attr("src"),
+    $img.attr("data-src"),
+  ];
+
+  const srcset = $img.attr("srcset");
+  if (srcset) {
+    srcset.split(",").forEach(function (entry) {
+      const url = entry.trim().split(" ")[0];
+      if (url) {
+        urlCandidates.push(url);
+      }
+    });
+  }
+
+  const dataSrcset = $img.attr("data-srcset");
+  if (dataSrcset) {
+    dataSrcset.split(",").forEach(function (entry) {
+      const url = entry.trim().split(" ")[0];
+      if (url) {
+        urlCandidates.push(url);
+      }
+    });
+  }
+
+  const filenames = new Set();
+  urlCandidates
+    .filter(Boolean)
+    .map(filenameFromUrl)
+    .forEach(function (name) {
+      expandFilenameVariants(name).forEach(function (variant) {
+        if (variant) {
+          filenames.add(variant);
+        }
+      });
+    });
+
+  return Array.from(filenames);
+}
+
+function removeArchiveItemsFromLightbox(archiveEntries) {
+  if (!archiveEntries || archiveEntries.length === 0) {
+    return false;
+  }
+
+  const filenamesToRemove = new Set();
+  archiveEntries.forEach(function (entry) {
+    entry.filenames.forEach(function (name) {
+      filenamesToRemove.add(name);
+    });
+  });
+
+  if (filenamesToRemove.size === 0) {
+    return false;
+  }
+
+  let itemsRemoved = false;
+
+  $(".project-section-images .w-dyn-items .w-lightbox").each(function () {
+    const $lightboxLink = $(this);
+    const $jsonScript = $lightboxLink.find("script.w-json");
+    if ($jsonScript.length === 0) {
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse($jsonScript.html());
+    } catch (error) {
+      console.warn("Unable to parse lightbox JSON", error);
+      return;
+    }
+
+    if (!data || !Array.isArray(data.items)) {
+      return;
+    }
+
+    const originalLength = data.items.length;
+
+    data.items = data.items.filter(function (item) {
+      const itemCandidates = [
+        item.url,
+        item.thumb,
+        item.fileName,
+        item.origFileName,
+        item.mainImage,
+        item._id,
+      ]
+        .filter(Boolean)
+        .map(filenameFromUrl);
+
+      return !itemCandidates.some(function (candidate) {
+        return filenamesToRemove.has(candidate);
+      });
+    });
+
+    if (data.items.length < originalLength) {
+      $jsonScript.text(JSON.stringify(data));
+      itemsRemoved = true;
+    }
+  });
+
+  return itemsRemoved;
+}
+
+function reinitialiseWebflowLightbox() {
+  if (!window.Webflow || !window.Webflow.require) {
+    return;
+  }
+
+  try {
+    const lightboxModule = window.Webflow.require("lightbox");
+    if (!lightboxModule) {
+      return;
+    }
+
+    if (typeof lightboxModule.destroy === "function") {
+      lightboxModule.destroy();
+    }
+    if (typeof lightboxModule.ready === "function") {
+      lightboxModule.ready();
+    }
+  } catch (error) {
+    console.warn("Failed to reinitialise Webflow lightbox", error);
+  }
+}
+
+function disableArchiveLightboxLinks(archiveEntries) {
+  if (!archiveEntries || archiveEntries.length === 0) {
+    return;
+  }
+
+  archiveEntries.forEach(function (entry) {
+    const $link = entry.link;
+    if (!$link || !$link.length) {
+      return;
+    }
+
+    $link.removeClass("w-lightbox");
+    $link.attr("aria-disabled", "true");
+    $link.attr("tabindex", "-1");
+    $link.css("cursor", "default");
+    $link.off("click.archive-photo").on("click.archive-photo", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    $link.find("script.w-json").remove();
+  });
+}
+
+function tagArchivePhotos() {
+  const archiveEntries = [];
+  $(".project-section-images .w-dyn-items img").each(function () {
+    const altText = $(this).attr("alt");
+    const parsedDate = parseDateFromAltText(altText);
+    if (!parsedDate) {
+      return;
+    }
+
+    const parentLink = $(this).closest("a");
+    if (!parentLink.length) {
+      return;
+    }
+
+    parentLink.addClass("archive-photo");
+
+    let dateWrapper = parentLink.find(".image-archive-date").first();
+    if (!dateWrapper.length) {
+      dateWrapper = $('<div class="image-archive-date"></div>');
+      parentLink.append(dateWrapper);
+    }
+
+    let dateParagraph = dateWrapper.find("p").first();
+    if (!dateParagraph.length) {
+      dateParagraph = $("<p></p>");
+      dateWrapper.append(dateParagraph);
+    }
+
+    dateParagraph.text(formatDateForArchive(parsedDate));
+
+    archiveEntries.push({
+      link: parentLink,
+      filenames: collectCandidateFilenames($(this), parentLink),
+    });
+  });
+
+  return archiveEntries;
+}
+
+function groupArchivePhotoItems() {
+  const $container = $(".project-section-images .w-dyn-items");
+  if (!$container.length) {
+    return;
+  }
+
+  // Undo any previous grouping to avoid nesting wrappers on re-run
+  $container.find(".archive-photos").each(function () {
+    const $group = $(this);
+    $group.children(".w-dyn-item").insertBefore($group);
+    $group.remove();
+  });
+
+  let currentGroup = [];
+  const flushGroup = function () {
+    if (currentGroup.length >= 2) {
+      const $wrapper = $('<div class="archive-photos"></div>');
+      currentGroup[0].before($wrapper);
+      currentGroup.forEach(function ($item) {
+        $wrapper.append($item);
+      });
+    }
+    currentGroup = [];
+  };
+
+  $container.children(".w-dyn-item").each(function () {
+    const $item = $(this);
+    if ($item.find("a.archive-photo").length) {
+      currentGroup.push($item);
+    } else {
+      flushGroup();
+    }
+  });
+
+  flushGroup();
 }
 
 $(document).ready(function () {
@@ -506,6 +1048,16 @@ $(document).ready(function () {
 
     // Bind the function to click event of filter links
     $("#filtres div a.tag").click(filterProjects);
+  }
+
+  if (isCurrentPage("singleProject")) {
+    var archiveEntries = tagArchivePhotos();
+    var itemsRemoved = removeArchiveItemsFromLightbox(archiveEntries);
+    disableArchiveLightboxLinks(archiveEntries);
+    if (itemsRemoved) {
+      reinitialiseWebflowLightbox();
+    }
+    groupArchivePhotoItems();
   }
 
   if (
