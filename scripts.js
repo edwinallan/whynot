@@ -59,35 +59,61 @@ function projectReadMore() {
   var $longueContent = $section.find(".longue");
   var $courteContent = $section.find(".courte");
 
+  // --- FEATURE: Détecter si la version longue est vide ---
+  var isLongueEmpty = $.trim($longueContent.html()) === "";
+  var isCourteNotEmpty = $.trim($courteContent.html()) !== "";
+
+  if (isLongueEmpty && isCourteNotEmpty) {
+    $courteContent.css("display", "block");
+    $readMoreLink.hide();
+  }
+  // -------------------------------------------------------
+
   if ($readMoreLink.length > 0) {
+    // On sauvegarde le texte d'origine du bouton au chargement
+    var texteOrigine = $readMoreLink.text();
+
     $readMoreLink.on("click", function (e) {
       e.preventDefault();
 
-      // 1. Get the current height of the section before changing anything
+      // On vérifie si la section est actuellement ouverte
+      var isExpanded = $longueContent.hasClass("is-visible");
+
+      // 1. On récupère la hauteur actuelle avant de tout changer
       var startHeight = $section.outerHeight();
 
-      // 2. Explicitly set the height so the CSS transition has a starting point
+      // 2. On fixe la hauteur pour donner un point de départ à la transition CSS
       $section.css("height", startHeight);
 
-      // 3. Swap the content visibility immediately
-      $courteContent.hide();
-      $longueContent.addClass("is-visible");
+      // 3. On inverse la visibilité et on met à jour le texte du bouton
+      if (isExpanded) {
+        // Action de RÉDUIRE
+        $longueContent.removeClass("is-visible");
+        $courteContent.show();
+        $(this).text(texteOrigine);
+      } else {
+        // Action de DÉPLIER
+        $courteContent.hide();
+        $longueContent.addClass("is-visible");
+        $(this).text("Réduire");
+      }
 
-      // 4. Calculate what the new height WILL be
-      // We use scrollHeight to see the natural height of the now-hidden-but-expanded content
-      var endHeight = $section[0].scrollHeight;
+      // 4. On calcule la nouvelle hauteur cible
+      // Astuce: on passe temporairement en "auto" pour lire la hauteur naturelle du nouveau contenu
+      $section.css("height", "auto");
+      var endHeight = $section.outerHeight();
 
-      // 5. Use requestAnimationFrame to ensure the browser realizes the height has changed
-      // This triggers the CSS 'transition' property defined in your styles
+      // On remet la hauteur de départ pour préparer l'animation
+      $section.css("height", startHeight);
+
+      // 5. On lance l'animation vers la nouvelle hauteur
       requestAnimationFrame(function () {
         $section.css("height", endHeight);
       });
 
-      // 6. Hide the button
-      $(this).fadeOut(300);
-
-      // 7. Cleanup: Once transition is done, reset height to 'auto' for responsiveness
-      $section.one("transitionend", function () {
+      // 6. Nettoyage: Une fois la transition terminée, on remet en 'auto'
+      // L'utilisation de .off() avant .one() évite que les événements s'accumulent si on clique très vite
+      $section.off("transitionend").one("transitionend", function () {
         $section.css("height", "auto");
       });
     });
@@ -1104,16 +1130,67 @@ function groupVerticalImages() {
   }
 }
 
+function hideDescriptionIfEmpty() {
+  $(".project-section-description").each(function () {
+    // Find the children within the current .project-section-description
+    var courteText = $(this).find("p.courte").text().trim();
+    var longueText = $(this).find("div.longue").text().trim();
+
+    // If both text contents are empty after trimming, hide the section
+    if (courteText === "" && longueText === "") {
+      $(this).hide();
+    }
+  });
+}
+
+function hideQuoteIfEmpty() {
+  $(".project-section-quotes").each(function () {
+    if ($(this).find(".quote-content").hasClass("w-dyn-bind-empty")) {
+      $(this).hide();
+    }
+  });
+}
+
+function tagLastVisibleMetaRow() {
+  // 1. Select all .meta-row elements
+  // 2. Use .not() to exclude any that have the 'w-condition-invisible' class
+  // 3. Use .last() to target only the final element in that filtered list
+  // 4. Add the 'meta-last' class
+  $(".meta-row").not(".w-condition-invisible").last().addClass("meta-last");
+}
+
+function moveInfoBlockIfSingleRow() {
+  // 1. On cible toutes les lignes qui ne sont PAS cachées par Webflow
+  // (J'ajoute :visible par sécurité au cas où elles seraient cachées par du CSS standard)
+  var $visibleRows = $(".meta-row")
+    .not(".w-condition-invisible")
+    .filter(":visible");
+
+  // 2. On vérifie s'il n'y a qu'UNE SEULE ligne visible
+  // ET que cette ligne n'a PAS la classe "entreprises"
+  if ($visibleRows.length === 1 && !$visibleRows.hasClass("entreprises")) {
+    // 3. On déplace tout le bloc info juste avant la bannière
+    $(".project-section-info-block").insertBefore(".project-section-banner");
+  }
+}
+
+// Call the function inside your document ready block
+$(document).ready(function () {
+  tagLastVisibleMetaRow();
+});
+
 $(document).ready(function () {
   logVisibleGridRowsAndColumns();
 
-  projectReadMore();
   checkLongueColumns();
 
   saveOriginalOrder();
   waitForImagesToLoad(projectMasonryOrder);
 
   groupVerticalImages();
+
+  hideDescriptionIfEmpty();
+  hideQuoteIfEmpty();
 
   $("#oli-vcard").on("click", vCardOlivier);
 
@@ -1151,6 +1228,9 @@ $(document).ready(function () {
       reinitialiseWebflowLightbox();
     }
     groupArchivePhotoItems();
+    tagLastVisibleMetaRow();
+    projectReadMore();
+    moveInfoBlockIfSingleRow();
   }
 
   if (

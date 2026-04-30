@@ -34,6 +34,10 @@ body {
         padding-left: 0;
       }
 
+      &.meta-last {
+        border-bottom: none;
+      }
+
       .meta-value {
         ul {
           li {
@@ -165,10 +169,10 @@ body {
       display: flex;
       flex-direction: column;
       gap: 2rem;
-      margin-bottom: 140px;
 
       @media (min-width: 991px) {
         flex-direction: row;
+        margin-bottom: 140px;
 
         > .w-dyn-item {
           flex: 1; // Forces them to share 50/50 space
@@ -256,6 +260,13 @@ body {
       * {
         color: var(--red);
       }
+
+      .tag {
+        border-color: var(--red);
+        &:hover {
+          font-weight: 300;
+        }
+      }
     }
 
     @media (min-width: 992px) {
@@ -277,4 +288,10 @@ body .blue-filter-container {
       display: none;
     }
   }
+}
+
+.w-container:before,
+.w-container:after {
+  content: none !important;
+  display: none !important; /* Extra insurance for grid layouts */
 }

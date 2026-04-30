@@ -30,6 +30,9 @@ body section.project-section-info-block div.meta-row ul {
   list-style: none;
   padding-left: 0;
 }
+body section.project-section-info-block div.meta-row.meta-last {
+  border-bottom: none;
+}
 body section.project-section-info-block div.meta-row .meta-value ul li {
   margin-bottom: 1em;
 }
@@ -128,11 +131,11 @@ body .collection-list .collection-item-2 span {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  margin-bottom: 140px;
 }
 @media (min-width: 991px) {
   .project-page .project-section-images div.vertical-image-group {
     flex-direction: row;
+    margin-bottom: 140px;
   }
   .project-page .project-section-images div.vertical-image-group > .w-dyn-item {
     flex: 1;
@@ -202,6 +205,12 @@ body .collection-list .collection-item-2 span {
 .accordion .accordion-item:hover * {
   color: var(--red);
 }
+.accordion .accordion-item:hover .tag {
+  border-color: var(--red);
+}
+.accordion .accordion-item:hover .tag:hover {
+  font-weight: 300;
+}
 @media (min-width: 992px) {
   .accordion .accordion-item:hover .accordion-details {
     display: block;
@@ -213,4 +222,10 @@ body .blue-filter-container:hover img {
 }
 body .blue-filter-container:hover .blue-filter {
   display: none;
+}
+
+.w-container:before,
+.w-container:after {
+  content: none !important;
+  display: none !important; /* Extra insurance for grid layouts */
 }
