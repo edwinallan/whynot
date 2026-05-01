@@ -126,9 +126,11 @@ function checkLongueColumns() {
     // If the text is shorter than 450 characters, force 1 column layout
     if ($this.text().trim().length < 450) {
       $this.css("column-count", "1");
+      $this.css("max-width", "60ch"); 
     } else {
       // Otherwise, let Webflow's default (3 columns) take over
       $this.css("column-count", "");
+      $this.css("max-width", "");
     }
   });
 }
@@ -1159,6 +1161,20 @@ function tagLastVisibleMetaRow() {
   $(".meta-row").not(".w-condition-invisible").last().addClass("meta-last");
 }
 
+function hideInfoBlockIfOnlyOpeningDate() {
+  $(".project-section-info-block").each(function () {
+    var $infoBlock = $(this);
+    var $visibleRows = $infoBlock
+      .children(".meta-row")
+      .not(".w-condition-invisible")
+      .filter(":visible");
+
+    if ($visibleRows.length === 1 && $visibleRows.hasClass("date-ouverture")) {
+      $infoBlock.hide();
+    }
+  });
+}
+
 function moveInfoBlockIfSingleRow() {
   // 1. On cible toutes les lignes qui ne sont PAS cachées par Webflow
   // (J'ajoute :visible par sécurité au cas où elles seraient cachées par du CSS standard)
@@ -1171,6 +1187,108 @@ function moveInfoBlockIfSingleRow() {
   if ($visibleRows.length === 1 && !$visibleRows.hasClass("entreprises")) {
     // 3. On déplace tout le bloc info juste avant la bannière
     $(".project-section-info-block").insertBefore(".project-section-banner");
+  }
+}
+
+function getProjectAvantPremiereImageCount() {
+  if (typeof project_page_number_of_ap_images !== "undefined") {
+    var apCount = parseInt(project_page_number_of_ap_images, 10);
+    return Number.isNaN(apCount) ? 0 : apCount;
+  }
+
+  if (typeof wf_avant_str !== "undefined") {
+    var fallbackCount = parseInt(wf_avant_str, 10);
+    return Number.isNaN(fallbackCount) ? 0 : fallbackCount;
+  }
+
+  return 0;
+}
+
+function initProjectAvantPremiereSlider() {
+  if (!isCurrentPage("singleProject")) return;
+
+  var imageCount = getProjectAvantPremiereImageCount();
+  if (imageCount <= 0) return;
+
+  var $titleSection = $(".project-section-title").first();
+  var $imagesList = $(".project-section-images .w-dyn-items").first();
+  if ($titleSection.length === 0 || $imagesList.length === 0) return;
+
+  var $items = $imagesList
+    .children(".project-section-image-collection-item")
+    .slice(0, imageCount);
+  if ($items.length === 0) return;
+
+  var $section = $(".project-section-avant_premiere").first();
+  if ($section.length === 0) {
+    $section = $('<section class="project-section-avant_premiere"></section>');
+    $titleSection.after($section);
+  } else {
+    $section.empty();
+  }
+
+  var $slider = $(
+    '<div role="list" class="project-avant-premiere-slider" aria-live="polite"></div>',
+  );
+  var $prev = $(
+    '<button type="button" class="project-avant-premiere-arrow is-prev" aria-label="Image precedente">&lsaquo;</button>',
+  );
+  var $next = $(
+    '<button type="button" class="project-avant-premiere-arrow is-next" aria-label="Image suivante">&rsaquo;</button>',
+  );
+
+  $section.append($slider);
+  $slider.append($items);
+
+  $items.addClass("project-avant-premiere-slide");
+  $items.removeClass("is-active").attr("aria-hidden", "true");
+  $items.first().addClass("is-active").attr("aria-hidden", "false");
+  $items.find("img").removeAttr("loading").attr("loading", "eager");
+
+  var currentIndex = 0;
+  var timer;
+
+  function showSlide(index) {
+    currentIndex = index;
+    $items.removeClass("is-active").attr("aria-hidden", "true");
+    $items.eq(currentIndex).addClass("is-active").attr("aria-hidden", "false");
+  }
+
+  function nextSlide() {
+    showSlide((currentIndex + 1) % $items.length);
+  }
+
+  function prevSlide() {
+    showSlide((currentIndex - 1 + $items.length) % $items.length);
+  }
+
+  function startSlider() {
+    stopSlider();
+    timer = setInterval(nextSlide, 3000);
+  }
+
+  function stopSlider() {
+    clearInterval(timer);
+  }
+
+  if ($items.length > 1) {
+    $slider.append($prev).append($next);
+
+    $prev.on("click", function () {
+      stopSlider();
+      prevSlide();
+    });
+
+    $next.on("click", function () {
+      stopSlider();
+      nextSlide();
+    });
+
+    startSlider();
+  }
+
+  if (typeof reinitialiseWebflowLightbox === "function") {
+    reinitialiseWebflowLightbox();
   }
 }
 
@@ -1235,7 +1353,7 @@ function initProjectPlanSliders() {
     resizeSlider();
     setTimeout(resizeSlider, 250);
 
-    if ($slides.length <= 1) return;
+    if ($slides.length <= 1) return; 
 
     var currentIndex = 0;
     var timer;
@@ -1310,6 +1428,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   initProjectPlanSliders();
+  initProjectAvantPremiereSlider();
   logVisibleGridRowsAndColumns();
 
   checkLongueColumns();
@@ -1360,6 +1479,7 @@ $(document).ready(function () {
     groupArchivePhotoItems();
     tagLastVisibleMetaRow();
     projectReadMore();
+    hideInfoBlockIfOnlyOpeningDate();
     moveInfoBlockIfSingleRow();
   }
 
@@ -1369,7 +1489,7 @@ $(document).ready(function () {
     $(window).width() >= 992
   ) {
     // Desktop functions here
-    accordionLoadImages();
+    accordionLoadImages(); 
     //accordionCalculateAdditionalHeight();
     accordionHover();
     whynotDynamicColours();
