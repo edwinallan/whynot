@@ -1174,12 +1174,142 @@ function moveInfoBlockIfSingleRow() {
   }
 }
 
+function initProjectPlanSliders() {
+  var $sections = $(".project-section-plan");
+  if ($sections.length === 0) return;
+
+  if ($("#project-plan-slider-styles").length === 0) {
+    $("head").append(
+      '<style id="project-plan-slider-styles">' +
+        ".project-section-plan .w-dyn-items{position:relative;overflow:hidden;}" +
+        ".project-section-plan .plans-slider{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 250ms ease;}" +
+        ".project-section-plan .plans-slider.is-active{opacity:1;pointer-events:auto;z-index:1;}" +
+        ".project-section-plan .plans-slider img{display:block;width:100%;height:100%;object-fit:contain;}" +
+        ".project-plan-slider-arrow{position:absolute;top:50%;z-index:3;display:flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:0;background:transparent;color:var(--blue,#152667);font-size:34px;line-height:1;cursor:pointer;opacity:0;transform:translateY(-50%);transition:opacity 150ms ease;}" +
+        ".project-section-plan .w-dyn-items:hover .project-plan-slider-arrow{opacity:1;}" +
+        ".project-plan-slider-arrow.is-prev{left:12px;}" +
+        ".project-plan-slider-arrow.is-next{right:12px;}" +
+        ".project-plan-slider-pills{position:absolute;left:50%;bottom:12px;z-index:3;display:flex;gap:6px;transform:translateX(-50%);}" +
+        ".project-plan-slider-pill{width:7px;height:7px;padding:0;border:1px solid var(--blue,#152667);border-radius:999px;background:transparent;cursor:pointer;transition:background-color 150ms ease,transform 150ms ease;}" +
+        ".project-plan-slider-pill.is-active{background:var(--blue,#152667);transform:scale(1.25);}" +
+      "</style>",
+    );
+  }
+
+  $sections.each(function () {
+    var $section = $(this);
+    if ($section.data("plan-slider-ready")) return;
+
+    var $list = $section.find(".w-dyn-items").first();
+    var $slides = $list.children(".plans-slider");
+    if ($list.length === 0 || $slides.length === 0) return;
+
+    $section.data("plan-slider-ready", true);
+    $list.attr("aria-live", "polite");
+    $slides.removeClass("is-active").attr("aria-hidden", "true");
+    $slides.first().addClass("is-active").attr("aria-hidden", "false");
+    $slides.find("img").removeAttr("loading").attr("loading", "eager");
+
+    function resizeSlider() {
+      var maxH = 0;
+      var containerWidth = $list.width();
+
+      if (containerWidth <= 0) return;
+
+      $slides.find("img").each(function () {
+        var w = this.naturalWidth || parseFloat($(this).attr("width"));
+        var h = this.naturalHeight || parseFloat($(this).attr("height"));
+        if (w && h) {
+          var projectedH = (h / w) * containerWidth;
+          if (projectedH > maxH) maxH = projectedH;
+        }
+      });
+
+      if (maxH > 0) {
+        $list.css("height", maxH + "px");
+      }
+    }
+
+    $(window).on("resize", resizeSlider);
+    $slides.find("img").on("load", resizeSlider);
+    resizeSlider();
+    setTimeout(resizeSlider, 250);
+
+    if ($slides.length <= 1) return;
+
+    var currentIndex = 0;
+    var timer;
+    var $prev = $(
+      '<button type="button" class="project-plan-slider-arrow is-prev" aria-label="Plan précédent">‹</button>',
+    );
+    var $next = $(
+      '<button type="button" class="project-plan-slider-arrow is-next" aria-label="Plan suivant">›</button>',
+    );
+    var $pills = $('<div class="project-plan-slider-pills" aria-label="Plans"></div>');
+
+    $slides.each(function (index) {
+      var $pill = $(
+        '<button type="button" class="project-plan-slider-pill" aria-label="Afficher le plan ' +
+          (index + 1) +
+          '"></button>',
+      );
+      if (index === 0) $pill.addClass("is-active");
+      $pills.append($pill);
+    });
+
+    $list.append($prev).append($next).append($pills);
+
+    function showSlide(index) {
+      currentIndex = index;
+      $slides.removeClass("is-active").attr("aria-hidden", "true");
+      $slides.eq(currentIndex).addClass("is-active").attr("aria-hidden", "false");
+      $pills.children().removeClass("is-active").eq(currentIndex).addClass("is-active");
+    }
+
+    function nextSlide() {
+      showSlide((currentIndex + 1) % $slides.length);
+    }
+
+    function prevSlide() {
+      showSlide((currentIndex - 1 + $slides.length) % $slides.length);
+    }
+
+    function startSlider() {
+      stopSlider();
+      timer = setInterval(nextSlide, 3000);
+    }
+
+    function stopSlider() {
+      clearInterval(timer);
+    }
+
+    $pills.on("click", ".project-plan-slider-pill", function () {
+      stopSlider();
+      showSlide($(this).index());
+      startSlider();
+    });
+
+    $prev.on("click", function () {
+      stopSlider();
+      prevSlide();
+    });
+
+    $next.on("click", function () {
+      stopSlider();
+      nextSlide();
+    });
+
+    startSlider();
+  });
+}
+
 // Call the function inside your document ready block
 $(document).ready(function () {
   tagLastVisibleMetaRow();
 });
 
 $(document).ready(function () {
+  initProjectPlanSliders();
   logVisibleGridRowsAndColumns();
 
   checkLongueColumns();
@@ -1189,7 +1319,7 @@ $(document).ready(function () {
 
   groupVerticalImages();
 
-  hideDescriptionIfEmpty();
+  hideDescriptionIfEmpty(); 
   hideQuoteIfEmpty();
 
   $("#oli-vcard").on("click", vCardOlivier);
@@ -1198,7 +1328,7 @@ $(document).ready(function () {
 
   $(window).resize(function () {
     var currentColumnCount = parseInt($("#masonry").css("column-count"), 10);
-    if (currentColumnCount !== previousColumnCount) {
+    if (currentColumnCount !== previousColumnCount) { 
       previousColumnCount = currentColumnCount;
       projectMasonryOrder();
     }
